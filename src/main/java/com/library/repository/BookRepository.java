@@ -23,6 +23,16 @@ public class BookRepository implements Repository<Book, String> {
     }
 
     @Override
+    public void update(Book item) {
+        for (int i = 0; i < books.size(); i++) {
+            if (books.get(i).getId().equals(item.getId())) {
+                books.set(i, item);
+                return;
+            }
+        }
+    }
+
+    @Override
     public void remove(String id) {
         // Look through the list and remove the book if the ID matches
         books.removeIf(book -> book.getId().equals(id));

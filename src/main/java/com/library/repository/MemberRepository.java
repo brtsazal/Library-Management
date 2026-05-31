@@ -22,6 +22,16 @@ public class MemberRepository implements Repository<Member, String> {
     }
 
     @Override
+    public void update(Member item) {
+        for (int i = 0; i < members.size(); i++) {
+            if (members.get(i).getMemberId().equals(item.getMemberId())) {
+                members.set(i, item);
+                return;
+            }
+        }
+    }
+
+    @Override
     public void remove(String id) {
         // Remove member if ID matches
         members.removeIf(member -> member.getMemberId().equals(id));

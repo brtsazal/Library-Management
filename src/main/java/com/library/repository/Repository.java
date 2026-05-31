@@ -10,6 +10,7 @@ import java.util.Optional;
  */
 public interface Repository<T, ID> {
     void add(T item); // Save a new item
+    void update(T item); // Update an existing item
     void remove(ID id); // Delete an item by its ID
     Optional<T> findById(ID id); // Look for an item by its ID (Optional means it might not exist)
     List<T> findAll(); // Get a list of all items

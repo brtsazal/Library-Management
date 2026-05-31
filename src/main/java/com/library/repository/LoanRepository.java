@@ -22,6 +22,16 @@ public class LoanRepository implements Repository<Loan, String> {
     }
 
     @Override
+    public void update(Loan item) {
+        for (int i = 0; i < loans.size(); i++) {
+            if (loans.get(i).getLoanId().equals(item.getLoanId())) {
+                loans.set(i, item);
+                return;
+            }
+        }
+    }
+
+    @Override
     public void remove(String id) {
         // Remove loan by ID
         loans.removeIf(loan -> loan.getLoanId().equals(id));
