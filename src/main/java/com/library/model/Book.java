@@ -1,18 +1,15 @@
 package com.library.model;
 
 /**
- * Represents a book in the library with basic metadata.
+ * Represents a book in the library.
  */
-public class Book {
-    private String id; // Unique ID for the book
-    private String title; // Title of the book
+public class Book extends LibraryItem {
     private String author; // The writer of the book
     private String isbn; // The unique ISBN number
     private int copies; // Total number of copies owned by the library
 
     public Book(String id, String title, String author, String isbn, int copies) {
-        this.id = id;
-        this.title = title;
+        super(id, title);
         this.author = author;
         this.isbn = isbn;
         this.copies = copies;
@@ -22,20 +19,9 @@ public class Book {
         this(id, title, author, isbn, 1);
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
+    @Override
+    public String getType() {
+        return "Book";
     }
 
     public String getAuthor() {

@@ -1,11 +1,11 @@
 package com.library.model;
 
 /**
- * Represents a generic library item with basic information.
+ * Abstract parent for library items that share the same core identity.
  */
-public class LibraryItem {
-    private String id; // Unique ID for the item
-    private String title; // Title of the item
+public abstract class LibraryItem {
+    protected String id; // Unique ID for the item
+    protected String title; // Title of the item
 
     public LibraryItem(String id, String title) {
         this.id = id;
@@ -27,4 +27,6 @@ public class LibraryItem {
     public void setTitle(String title) {
         this.title = title;
     }
+
+    public abstract String getType();
 }
