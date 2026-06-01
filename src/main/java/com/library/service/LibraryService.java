@@ -1,20 +1,25 @@
 package com.library.service;
 
 import com.library.model.Book;
+import com.library.model.Loan;
 import com.library.model.Member;
 import com.library.repository.BookRepository;
+import com.library.repository.LoanRepository;
 import com.library.repository.MemberRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public class LibraryService {
     private final BookRepository bookRepository;
     private final MemberRepository memberRepository;
+    private final LoanRepository loanRepository;
 
-    public LibraryService(BookRepository bookRepository, MemberRepository memberRepository) {
+    public LibraryService(BookRepository bookRepository, MemberRepository memberRepository, LoanRepository loanRepository) {
         this.bookRepository = bookRepository;
         this.memberRepository = memberRepository;
+        this.loanRepository = loanRepository;
     }
 
     public void addBook(String title, String author, String isbn, int copies) {
@@ -102,6 +107,55 @@ public class LibraryService {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
     }
 
+    public void borrowBook(String memberId, String bookId) {
+        Member member = getMember(memberId);
+        Book book = getBook(bookId);
+
+        if (member.getCurrentLoans().size() >= 3) {
+            throw new IllegalStateException("Member has already borrowed the maximum limit of 3 books.");
+        }
+
+        if (book.getAvailableCopies() == 0) {
+            book.addToWaitlist(member);
+            throw new IllegalStateException("Book is already borrowed. You have been added to the waitlist.");
+        }
+
+        String loanId = generateNextLoanId();
+        Loan loan = new Loan(loanId, book, member, LocalDate.now(), LocalDate.now().plusDays(14));
+
+        book.setAvailableCopies(book.getAvailableCopies() - 1);
+        member.addLoan(loan);
+        loanRepository.add(loan);
+    }
+
+    public String returnBook(String memberId, String bookId) {
+        Member member = getMember(memberId);
+        Book book = getBook(bookId);
+
+        Optional<Loan> activeLoanOpt = member.getCurrentLoans().stream()
+                .filter(loan -> loan.getBook().getId().equals(bookId) && !loan.isReturned())
+                .findFirst();
+
+        if (activeLoanOpt.isEmpty()) {
+            throw new IllegalArgumentException("No active loan found for this book and member.");
+        }
+
+        Loan loan = activeLoanOpt.get();
+        loan.setReturnDate(LocalDate.now());
+        member.removeLoan(loan);
+        book.setAvailableCopies(book.getAvailableCopies() + 1);
+
+        String message = "Book returned successfully.";
+        if (!book.getWaitlist().isEmpty()) {
+            Member nextInLine = book.getWaitlist().get(0);
+            book.removeFromWaitlist(nextInLine);
+            message += "\nNotice: Book '" + book.getTitle() + "' is now available for waitlisted member: "
+                    + nextInLine.getName() + " (ID: " + nextInLine.getMemberId() + ")";
+        }
+
+        return message;
+    }
+
     private void validateEmail(String email) {
         if (!email.contains("@") || !email.contains(".")) {
             throw new IllegalArgumentException("Invalid email format.");
@@ -138,5 +192,21 @@ public class LibraryService {
             }
         }
         return String.format("M%03d", maxId + 1);
+    }
+
+    private String generateNextLoanId() {
+        int maxId = 0;
+        for (Loan loan : loanRepository.findAll()) {
+            try {
+                if (loan.getLoanId().startsWith("L")) {
+                    int idNum = Integer.parseInt(loan.getLoanId().substring(1));
+                    if (idNum > maxId) {
+                        maxId = idNum;
+                    }
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return String.format("L%03d", maxId + 1);
     }
 }

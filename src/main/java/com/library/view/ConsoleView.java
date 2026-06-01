@@ -34,8 +34,10 @@ public class ConsoleView {
 
     public void displayBorrowingMenu() {
         System.out.println("\n--- Borrowing Operations ---");
-        System.out.println("Initial menu structure created.");
-        System.out.println("Feature implementation will be added later.");
+        System.out.println("1. Borrow Book");
+        System.out.println("2. Return Book");
+        System.out.println("3. View Current Loans of a Member");
+        System.out.println("0. Back to Main Menu");
         System.out.print("Select an option: ");
     }
 
