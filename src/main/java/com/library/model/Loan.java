@@ -68,4 +68,14 @@ public class Loan {
     public void setReturnDate(LocalDate returnDate) {
         this.returnDate = returnDate;
     }
+
+    public boolean isReturned() {
+        return returnDate != null;
+    }
+
+    @Override
+    public String toString() {
+        return "Loan [ID=" + loanId + ", Book=" + book.getTitle() + ", Member=" + member.getName()
+                + ", Borrow Date=" + borrowDate + ", Due Date=" + dueDate + ", Returned=" + isReturned() + "]";
+    }
 }
