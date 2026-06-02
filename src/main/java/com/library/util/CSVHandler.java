@@ -24,12 +24,15 @@ public class CSVHandler {
     private static final String LOANS_FILE = "loans.csv";
     private static final String WISHLIST_FILE = "wishlist.csv";
 
+    private CSVHandler() {
+    }
+
     public static void saveData(BookRepository bookRepo, MemberRepository memberRepo, LoanRepository loanRepo) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(BOOKS_FILE))) {
             writer.println("ID,Title,Author,ISBN,Copies,AvailableCopies");
             for (Book book : bookRepo.findAll()) {
-                String title = book.getTitle().replace(",", "");
-                String author = book.getAuthor().replace(",", "");
+                String title = sanitize(book.getTitle());
+                String author = sanitize(book.getAuthor());
                 writer.println(String.join(",", book.getId(), title, author, book.getIsbn(),
                         String.valueOf(book.getCopies()), String.valueOf(book.getAvailableCopies())));
             }
@@ -40,7 +43,7 @@ public class CSVHandler {
         try (PrintWriter writer = new PrintWriter(new FileWriter(MEMBERS_FILE))) {
             writer.println("ID,Name,Email");
             for (Member member : memberRepo.findAll()) {
-                String name = member.getName().replace(",", "");
+                String name = sanitize(member.getName());
                 writer.println(String.join(",", member.getMemberId(), name, member.getEmail()));
             }
         } catch (IOException e) {
@@ -76,9 +79,14 @@ public class CSVHandler {
             try (BufferedReader reader = new BufferedReader(new FileReader(membersFile))) {
                 String line = reader.readLine();
                 while ((line = reader.readLine()) != null) {
+                    if (line.isBlank()) {
+                        continue;
+                    }
                     String[] parts = line.split(",", -1);
                     if (parts.length >= 3) {
                         memberRepo.add(new Member(parts[0], parts[1], parts[2]));
+                    } else {
+                        System.err.println("Skipping malformed member row: " + line);
                     }
                 }
             } catch (IOException e) {
@@ -91,21 +99,34 @@ public class CSVHandler {
             try (BufferedReader reader = new BufferedReader(new FileReader(booksFile))) {
                 String line = reader.readLine();
                 while ((line = reader.readLine()) != null) {
+                    if (line.isBlank()) {
+                        continue;
+                    }
                     String[] parts = line.split(",", -1);
                     if (parts.length >= 6) {
-                        int copies = Integer.parseInt(parts[4]);
-                        int availableCopies = Integer.parseInt(parts[5]);
-                        Book book = new Book(parts[0], parts[1], parts[2], parts[3], copies);
-                        book.setAvailableCopies(availableCopies);
-                        bookRepo.add(book);
+                        try {
+                            int copies = Integer.parseInt(parts[4]);
+                            int availableCopies = Integer.parseInt(parts[5]);
+                            Book book = new Book(parts[0], parts[1], parts[2], parts[3], copies);
+                            book.setAvailableCopies(availableCopies);
+                            bookRepo.add(book);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Skipping malformed book row: " + line);
+                        }
                     } else if (parts.length == 5) {
-                        boolean oldBorrowed = Boolean.parseBoolean(parts[4]);
-                        Book book = new Book(parts[0], parts[1], parts[2], parts[3], 1);
-                        book.setAvailableCopies(oldBorrowed ? 0 : 1);
-                        bookRepo.add(book);
+                        if ("true".equalsIgnoreCase(parts[4]) || "false".equalsIgnoreCase(parts[4])) {
+                            boolean oldBorrowed = Boolean.parseBoolean(parts[4]);
+                            Book book = new Book(parts[0], parts[1], parts[2], parts[3], 1);
+                            book.setAvailableCopies(oldBorrowed ? 0 : 1);
+                            bookRepo.add(book);
+                        } else {
+                            System.err.println("Skipping malformed legacy book row: " + line);
+                        }
+                    } else {
+                        System.err.println("Skipping malformed book row: " + line);
                     }
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("Error loading books: " + e.getMessage());
             }
         }
@@ -115,32 +136,43 @@ public class CSVHandler {
             try (BufferedReader reader = new BufferedReader(new FileReader(loansFile))) {
                 String line = reader.readLine();
                 while ((line = reader.readLine()) != null) {
+                    if (line.isBlank()) {
+                        continue;
+                    }
                     String[] parts = line.split(",", -1);
                     if (parts.length >= 6) {
-                        String loanId = parts[0];
-                        String bookId = parts[1];
-                        String memberId = parts[2];
-                        LocalDate borrowDate = LocalDate.parse(parts[3]);
-                        LocalDate dueDate = LocalDate.parse(parts[4]);
-                        LocalDate returnDate = parts[5].isEmpty() ? null : LocalDate.parse(parts[5]);
+                        try {
+                            String loanId = parts[0];
+                            String bookId = parts[1];
+                            String memberId = parts[2];
+                            LocalDate borrowDate = LocalDate.parse(parts[3]);
+                            LocalDate dueDate = LocalDate.parse(parts[4]);
+                            LocalDate returnDate = parts[5].isEmpty() ? null : LocalDate.parse(parts[5]);
 
-                        Book book = bookRepo.findById(bookId).orElse(null);
-                        Member member = memberRepo.findById(memberId).orElse(null);
+                            Book book = bookRepo.findById(bookId).orElse(null);
+                            Member member = memberRepo.findById(memberId).orElse(null);
 
-                        if (book != null && member != null) {
-                            Loan loan = new Loan(loanId, book, member, borrowDate, dueDate);
-                            if (returnDate != null) {
-                                loan.setReturnDate(returnDate);
+                            if (book != null && member != null) {
+                                Loan loan = new Loan(loanId, book, member, borrowDate, dueDate);
+                                if (returnDate != null) {
+                                    loan.setReturnDate(returnDate);
+                                }
+                                loanRepo.add(loan);
+                                member.addToHistory(loan);
+                                if (returnDate == null) {
+                                    member.addToCurrentLoans(loan);
+                                }
+                            } else {
+                                System.err.println("Skipping loan row with missing references: " + line);
                             }
-                            loanRepo.add(loan);
-                            member.addToHistory(loan);
-                            if (returnDate == null) {
-                                member.addToCurrentLoans(loan);
-                            }
+                        } catch (RuntimeException e) {
+                            System.err.println("Skipping malformed loan row: " + line);
                         }
+                    } else {
+                        System.err.println("Skipping malformed loan row: " + line);
                     }
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("Error loading loans: " + e.getMessage());
             }
         }
@@ -150,18 +182,29 @@ public class CSVHandler {
             try (BufferedReader reader = new BufferedReader(new FileReader(wishlistFile))) {
                 String line = reader.readLine();
                 while ((line = reader.readLine()) != null) {
+                    if (line.isBlank()) {
+                        continue;
+                    }
                     String[] parts = line.split(",", -1);
                     if (parts.length >= 2) {
                         Book book = bookRepo.findById(parts[0]).orElse(null);
                         Member member = memberRepo.findById(parts[1]).orElse(null);
                         if (book != null && member != null) {
                             book.addToWaitlist(member);
+                        } else {
+                            System.err.println("Skipping wishlist row with missing references: " + line);
                         }
+                    } else {
+                        System.err.println("Skipping malformed wishlist row: " + line);
                     }
                 }
             } catch (IOException e) {
                 System.err.println("Error loading wishlist: " + e.getMessage());
             }
         }
+    }
+
+    private static String sanitize(String value) {
+        return value == null ? "" : value.replace(",", "");
     }
 }
