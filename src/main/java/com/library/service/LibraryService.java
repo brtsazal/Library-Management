@@ -22,6 +22,9 @@ public class LibraryService {
         this.loanRepository = loanRepository;
     }
 
+    public void initialize() {
+    }
+
     public void addBook(String title, String author, String isbn, int copies) {
         boolean exists = bookRepository.findAll().stream()
                 .anyMatch(book -> book.getIsbn().equals(isbn));
@@ -62,8 +65,15 @@ public class LibraryService {
     }
 
     public void removeBook(String id) {
-        getBook(id);
+        Book book = getBook(id);
+        if (book.getAvailableCopies() < book.getCopies()) {
+            throw new IllegalStateException("Cannot remove a book that has active loans.");
+        }
         bookRepository.remove(id);
+    }
+
+    public List<Book> searchBooks(String query) {
+        return bookRepository.search(query);
     }
 
     public List<Book> getAllBooks() {
