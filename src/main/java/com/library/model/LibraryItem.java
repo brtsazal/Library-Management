@@ -4,8 +4,8 @@ package com.library.model;
  * Abstract parent for library items that share the same core identity.
  */
 public abstract class LibraryItem {
-    protected String id; // Unique ID for the item
-    protected String title; // Title of the item
+    private String id; // Unique ID for the item
+    private String title; // Title of the item
 
     public LibraryItem(String id, String title) {
         this.id = id;
