@@ -1,6 +1,7 @@
 package com.library.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ public class Book extends LibraryItem {
     }
 
     public List<Member> getWaitlist() {
-        return waitlist;
+        return Collections.unmodifiableList(waitlist);
     }
 
     public void addToWaitlist(Member member) {
@@ -87,7 +88,7 @@ public class Book extends LibraryItem {
 
     @Override
     public String toString() {
-        return "Book [ID=" + id + ", Title=" + title + ", Author=" + author + ", ISBN=" + isbn
+        return "Book [ID=" + getId() + ", Title=" + getTitle() + ", Author=" + author + ", ISBN=" + isbn
                 + ", Copies=" + copies + ", Available=" + availableCopies + ", Waitlist Size=" + waitlist.size() + "]";
     }
 }
