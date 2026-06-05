@@ -3,9 +3,8 @@
 
 A highly robust, professional **Library Management System** implemented in Java, showcasing clean code practices and solid **Object-Oriented Programming (OOP)** design patterns. It features a responsive Command Line Interface (CLI) following the **Model-View-Controller (MVC)** architectural pattern, persistent local CSV storage, and an automated test suite.
 
----
 
-## 🌟 Core Features
+## Core Features
 
 ### 1. Book Asset Management & Multiple Copies
 * **Asset Tracking**: Track books by ID, Title, Author, and ISBN.
@@ -28,24 +27,24 @@ A highly robust, professional **Library Management System** implemented in Java,
 
 ---
 
-## 🏗️ Technical Architecture & OOP Principles
+## Technical Architecture & OOP Principles
 
 The application is structured around a clean **Model-View-Controller (MVC)** architecture to separate concerns, making it highly modular, maintainable, and testable.
 
 ### Applied OOP Principles
 * **Strict Encapsulation**: Members control their own loan lists. Getters for lists return unmodifiable views (`Collections.unmodifiableList`), and list updates are strictly controlled through cohesive domain methods (`addToHistory(loan)` / `addToCurrentLoans(loan)`).
-* **Inheritance & Abstraction**: [LibraryItem](file:///c:/Users/ACER/Desktop/Library_management_System/src/main/java/com/library/model/LibraryItem.java) is a true abstract parent class declaring the abstract method `public abstract String getType();`, which is implemented by subclasses (such as [Book](file:///c:/Users/ACER/Desktop/Library_management_System/src/main/java/com/library/model/Book.java)) to provide polymorphic type identification.
+* **Inheritance & Abstraction**: [LibraryItem]/src/main/java/com/library/model/LibraryItem.java) is a true abstract parent class declaring the abstract method `public abstract String getType();`, which is implemented by subclasses (such as [Book](/src/main/java/com/library/model/Book.java)) to provide polymorphic type identification.
 * **Polymorphism**: The data access layer is built around a generic `Repository<T, ID>` interface to allow swap-in mock storage engines or SQL databases.
 
 ---
 
-## 🚀 Setup & Execution Instructions
+## Setup & Execution Instructions
 
 ### Prerequisites
 * **Java JDK**: Version 17 or higher (fully tested and compiled under Java 24)
 * **Maven**: Version 3.6 or higher (optional, standard compiler fallback supported)
 
-### 📦 Build and Compile
+###  Build and Compile
 From the project root directory, compile all source code:
 ```bash
 # Using Maven:
@@ -65,7 +64,7 @@ mvn exec:java -Dexec.mainClass="com.library.Main"
 java -cp target/classes com.library.Main
 ```
 
-### 🧪 Running the Test Suite
+### Running the Test Suite
 The application contains a robust suite of JUnit 5 tests verifying core logic, business constraints, validation rules, active loan guards, and encapsulation integrity:
 ```bash
 # Execute Maven surefire plugin tests:
@@ -74,7 +73,7 @@ mvn test
 
 ---
 
-## 📁 Source Code Directory Structure
+## Source Code Directory Structure
 ```text
 Library_management_System/
 │
